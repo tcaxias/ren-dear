@@ -21,9 +21,11 @@
   let progress: OrchestrateState = orchestrator.snapshot
   let unsub: (() => void) | null = null
 
+  let lastRange: { from: string; to: string; endpointIds: string[] } | null = null
   let error: string | null = null
   let corsError: boolean = false
   let partial: boolean = false
+  let retrying: boolean = false
 
   let rows: Row[] = $state(data.snapshot.rows)
   data.subscribe((s) => { rows = s.rows })
@@ -62,6 +64,7 @@
     to: string
     endpointIds: string[]
   }): Promise<void> {
+    lastRange = detail
     const { from, to, endpointIds } = detail
     selectedEndpointIds = endpointIds
     error = null
@@ -129,6 +132,16 @@
 
     data.setLoading(false)
   }
+
+  async function retry(): Promise<void> {
+    if (!lastRange || retrying) return
+    retrying = true
+    try {
+      await onRangeChange(lastRange)
+    } finally {
+      retrying = false
+    }
+  }
 </script>
 
 <div class="app">
@@ -139,7 +152,12 @@
 
   <main>
     {#if corsError}
-      <div class="alert alert-error">{t('corsError')}</div>
+      <div class="alert alert-error cors-banner">
+        <strong>{t('corsError')}</strong>
+        <button class="retry" onclick={retry} disabled={retrying}>
+          {retrying ? t('loading') : t('retry')}
+        </button>
+      </div>
     {:else if error}
       <div class="alert alert-error">{error}</div>
     {:else if partial}
@@ -228,4 +246,35 @@
     border: 1px solid #e9d99e;
   }
   .empty { color: #666; font-size: 0.95rem; padding: 16px 0; }
+  .cors-banner {
+    background: #fdecea;
+    color: #b00020;
+    border: 2px solid #b00020;
+    padding: 14px 16px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .cors-banner strong {
+    display: block;
+    width: 100%;
+    font-size: 1rem;
+  }
+  .cors-banner .retry {
+    background: #b00020;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .cors-banner .retry:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 </style>

@@ -247,8 +247,9 @@ export class ApiError extends Error {
 
 /** True when the error is a network/CORS failure rather than an API error. */
 export function isNetworkError(err: unknown): boolean {
-  if (err instanceof TypeError) {
-    return /failed to fetch|network/i.test(err.message)
+  if (err instanceof Error) {
+    const msg = err.message.toLowerCase()
+    return /failed to fetch|network|cors|cross-origin|access-control/i.test(msg)
   }
   return false
 }

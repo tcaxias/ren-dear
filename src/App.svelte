@@ -112,6 +112,14 @@
 
     const failed = orchestrator.snapshot.tasks.filter((t) => t.status === 'failed')
     const networkFail = failed.some((t) => t.network)
+    console.log('[ren-dear] range applied', {
+      endpoints: endpoints.length,
+      tasks: orchestrator.snapshot.total,
+      fetched: orchestrator.snapshot.fetched,
+      failed: failed.length,
+      networkFail,
+      rows: data.snapshot.rows.length,
+    })
     if (networkFail) corsError = true
     else if (failed.length && orchestrator.snapshot.fetched === 0) {
       error = t('errorLoading')

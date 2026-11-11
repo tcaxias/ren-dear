@@ -28,7 +28,8 @@
 
   let from = $state(defaultFrom)
   let to = $state(defaultTo)
-  let selected = $state<string[]>([])
+  /** All endpoints selected by default so a date range alone triggers a fetch. */
+  let selected = $state<string[]>(ENDPOINTS.map((e) => e.id))
   let capError = $derived(computeCapError())
 
   function endpointGrouped(): Record<string, Endpoint[]> {

@@ -96,6 +96,8 @@
       }
     }
     if (cachedRows.length) data.merge(cachedRows)
+    // Free task.rows from the orchestrator — data.store now owns the rows.
+    for (const task of orchestrator.snapshot.tasks) task.rows = []
 
     const culture = apiCulture(lang)
 
@@ -128,6 +130,7 @@
       }
     }
     if (newRows.length) data.merge(newRows)
+    for (const task of orchestrator.snapshot.tasks) task.rows = []
 
     const failed = orchestrator.snapshot.tasks.filter((t) => t.status === 'failed')
     const networkFail = failed.some((t) => t.network)

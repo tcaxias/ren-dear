@@ -11,7 +11,7 @@
  * `getOrFetch`, so cache hits short-circuit with no network).
  */
 
-import { writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 import type { Endpoint, DateParams, RenRecord, Culture } from './api.js'
 import { dateKeyFor, db } from './db.js'
 import { isNetworkError } from './api.js'
@@ -113,9 +113,7 @@ export class Orchestrator {
   }
 
   get snapshot(): OrchestrateState {
-    let current: OrchestrateState | undefined
-    this.state.subscribe((s) => { current = s })()
-    return current!
+    return get(this.state)
   }
 
   /** Plan tasks for the given endpoints over [from, to]. All tasks start
@@ -174,7 +172,16 @@ export class Orchestrator {
     if (changed) this.recalcFetched()
   }
 
+  private lastFetchedUpdate = 0
+  private lastStatusUpdate = 0
+
   private recalcFetched(): void {
+    const now = Date.now()
+    const allDone = this.snapshot.tasks.every((t) => t.status !== 'queued' && t.status !== 'running')
+    // Throttle fetched-count updates to at most once per 100ms during active fetching.
+    // Always update when everything is done so the final count is accurate.
+    if (!allDone && now - this.lastFetchedUpdate < 100) return
+    this.lastFetchedUpdate = now
     this.state.update((s) => {
       s.fetched = s.tasks.filter((t) => t.status === 'ok').length
       return s
@@ -182,11 +189,22 @@ export class Orchestrator {
   }
 
   private setStatus(taskId: string, status: TaskStatus, patch?: Partial<FetchTask>): void {
+    const now = Date.now()
+    const allDone = this.snapshot.tasks.every((t) => t.status !== 'queued' && t.status !== 'running')
+    const t = this.snapshot.tasks.find((x) => x.id === taskId)
+    if (t) {
+      t.status = status
+      if (patch) Object.assign(t, patch)
+    }
+    // Throttle store notifications: propagate at most once per 100ms during
+    // active fetching, always on completion so the final state is accurate.
+    if (!allDone && now - this.lastStatusUpdate < 100) return
+    this.lastStatusUpdate = now
     this.state.update((s) => {
-      const t = s.tasks.find((x) => x.id === taskId)
-      if (t) {
-        t.status = status
-        if (patch) Object.assign(t, patch)
+      const tt = s.tasks.find((x) => x.id === taskId)
+      if (tt) {
+        tt.status = status
+        if (patch) Object.assign(tt, patch)
       }
       return s
     })

@@ -153,20 +153,24 @@ export class Orchestrator {
   async markCachedOk(endpoints: Endpoint[]): Promise<void> {
     const byId = new Map(endpoints.map((e) => [e.id, e]))
     let changed = false
-    // Do the async lookups properly.
-    for (const task of this.snapshot.tasks) {
-      if (task.status !== 'queued') continue
-      const endpoint = byId.get(task.endpointId)
-      if (!endpoint) continue
-      const cached = await db.fetches.get([endpoint.id, task.dateKey])
-      if (cached) {
-        this.state.update((s) => {
-          const t = s.tasks.find((x) => x.id === task.id)
-          if (t) { t.status = 'ok'; t.rows = cached.payload; changed = true }
-          return s
-        })
-      }
-    }
+    // Collect all queued tasks that might have a cache entry.
+    const queuedTasks = this.snapshot.tasks.filter((t) => t.status === 'queued')
+    if (queuedTasks.length === 0) return
+    // Batch all cache lookups in parallel instead of sequential awaits.
+    const keys = queuedTasks.map((t) => {
+      const endpoint = byId.get(t.endpointId)
+      return endpoint ? [endpoint.id, t.dateKey] as [string, string] : null
+    }).filter((k): k is [string, string] => k !== null)
+    const cached = await db.fetches.bulkGet(keys)
+    cached.forEach((entry, i) => {
+      if (!entry) return
+      const task = queuedTasks[i]
+      this.state.update((s) => {
+        const t = s.tasks.find((x) => x.id === task.id)
+        if (t) { t.status = 'ok'; t.rows = entry.payload; changed = true }
+        return s
+      })
+    })
     if (changed) this.recalcFetched()
   }
 

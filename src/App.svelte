@@ -86,7 +86,9 @@
     subscribeProgress()
 
     orchestrator.plan(endpoints, fromDate, toDate)
-    await orchestrator.markCachedOk(endpoints)
+    // Don't await markCachedOk — cache lookup is an optimization, not a blocker.
+    // If it's slow or fails, we just refetch everything fresh.
+    orchestrator.markCachedOk(endpoints)
 
     // Merge any cached rows into the UI dataset (resume on reload).
     const cachedRows: Row[] = []

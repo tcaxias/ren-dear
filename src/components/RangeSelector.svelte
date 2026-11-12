@@ -21,11 +21,11 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  /** Default range: last 2 years ending today. */
+  /** Default range: last 90 days ending today. */
   const today = new Date()
   const defaultTo = formatDate(today)
   const defaultFrom = formatDate(
-    new Date(Date.UTC(today.getUTCFullYear() - DEFAULT_HISTORY_CAP_YEARS, today.getUTCMonth(), today.getUTCDate())),
+    new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 90)),
   )
 
   let from = $state(defaultFrom)

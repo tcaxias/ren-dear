@@ -14,6 +14,13 @@
   let colDim: Dimension = $state('endpoint')
   let agg: Aggregator = $state('sum')
 
+  let pivotResult = $state<{ rowValues: string[]; colValues: string[]; result: Array<{ label: string; cells: Map<string, number> }> }>({
+    rowValues: [],
+    colValues: [],
+    result: [],
+  })
+  let lastPivotUpdate = 0
+
   function unique(values: string[]): string[] {
     return [...new Set(values)].sort()
   }
@@ -29,8 +36,7 @@
     }
   }
 
-  /** Build the pivot matrix (recomputed whenever rows/dimensions change). */
-  const pivot = $derived(() => {
+  function computePivot(): void {
     const rowValues = unique(rows.map((r) => r[rowDim]))
     const colValues = unique(rows.map((r) => r[colDim]))
     const result = rowValues.map((rv) => {
@@ -41,7 +47,15 @@
       }
       return { label: rv, cells }
     })
-    return { rowValues, colValues, result }
+    pivotResult = { rowValues, colValues, result }
+  }
+
+  /** Recompute pivot at most once per 100ms — avoids O(n²) churn on every row merge during backfill. */
+  $effect(() => {
+    const now = Date.now()
+    if (now - lastPivotUpdate < 100) return
+    lastPivotUpdate = now
+    computePivot()
   })
 </script>
 
@@ -76,23 +90,23 @@
       </div>
     </div>
 
-    {#if pivot().result.length === 0}
+    {#if pivotResult.result.length === 0}
       <p class="empty">{t('noData')}</p>
     {:else}
       <table>
         <thead>
           <tr>
             <th>{rowDim === 'date' ? t('date') : rowDim === 'endpoint' ? t('endpoint') : t('type')}</th>
-            {#each pivot().colValues as cv}
+            {#each pivotResult.colValues as cv}
               <th>{cv}</th>
             {/each}
           </tr>
         </thead>
         <tbody>
-          {#each pivot().result as rv}
+          {#each pivotResult.result as rv}
             <tr>
               <td class="label">{rv.label}</td>
-              {#each pivot().colValues as cv}
+              {#each pivotResult.colValues as cv}
                 <td>{rv.cells.get(cv) ?? 0}</td>
               {/each}
             </tr>

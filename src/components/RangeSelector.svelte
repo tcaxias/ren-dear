@@ -13,6 +13,8 @@
 
   let { onrangechange }: { onrangechange?: (detail: RangeChangeDetail) => void } = $props()
 
+  console.log('[RangeSelector] onrangechange prop:', typeof onrangechange)
+
   const show = isEnabled('rangeSelector')
 
   function formatDate(d: Date): string {
@@ -63,8 +65,22 @@
   }
 
   function apply(): void {
+    console.log(
+      '[RangeSelector] apply() called, onrangechange defined:',
+      typeof onrangechange,
+      'selected:',
+      selected.length,
+    )
     const err = computeCapError()
-    if (err) return
+    if (err) {
+      console.log('[RangeSelector] apply() blocked by cap error:', err)
+      return
+    }
+    console.log('[RangeSelector] apply() calling onrangechange with', {
+      from,
+      to,
+      endpointIds: [...selected],
+    })
     onrangechange?.({ from, to, endpointIds: [...selected] })
   }
 </script>

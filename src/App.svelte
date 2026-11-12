@@ -14,18 +14,18 @@
   import DataGrid from './components/DataGrid.svelte'
 
   let lang: Lang = getLang()
-  let view: 'pivot' | 'chart' | 'grid' = 'pivot'
+  let view: 'pivot' | 'chart' | 'grid' = $state('pivot')
   let selectedEndpointIds: string[] = []
 
   let orchestrator = createOrchestrator()
-  let progress: OrchestrateState = orchestrator.snapshot
+  let progress: OrchestrateState = $state(orchestrator.snapshot)
   let unsub: (() => void) | null = null
 
   let lastRange: { from: string; to: string; endpointIds: string[] } | null = null
-  let error: string | null = null
-  let corsError: boolean = false
-  let partial: boolean = false
-  let retrying: boolean = false
+  let error: string | null = $state(null)
+  let corsError: boolean = $state(false)
+  let partial: boolean = $state(false)
+  let retrying: boolean = $state(false)
 
   let rows: Row[] = $state(data.snapshot.rows)
   data.subscribe((s) => { rows = s.rows })

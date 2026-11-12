@@ -106,7 +106,19 @@
       return records // RenRecord[]: the consumer (App) tags rows with dateKey via toRows() at merge time
     }
 
-    await orchestrator.execute(fetchTask, endpoints, culture)
+    console.log('[ren-dear] onRangeChange about to execute()', {
+      tasks: orchestrator.snapshot.total,
+      fetched: orchestrator.snapshot.fetched,
+      endpoints: endpoints.length,
+    })
+
+    try {
+      await orchestrator.execute(fetchTask, endpoints, culture)
+    } catch (err) {
+      console.log('[ren-dear] onRangeChange execute() threw', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
 
     // Merge freshly fetched rows.
     const newRows: Row[] = []

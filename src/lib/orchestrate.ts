@@ -198,6 +198,7 @@ export class Orchestrator {
       this.state.update((s) => ({ ...s, running: true, error: null }))
 
       const queuedCount = this.snapshot.tasks.filter((t) => t.status === 'queued').length
+      console.log('[orchestrator] execute() starting', { queuedCount, workers: Math.min(CONCURRENCY, queuedCount) })
       if (queuedCount === 0) {
         this.state.update((s) => ({ ...s, running: false }))
         this.running = false
@@ -242,6 +243,7 @@ export class Orchestrator {
         return s
       })
       if (!taskId) break
+      console.log('[orchestrator] worker starting task', { taskId })
 
       const task = this.snapshot.tasks.find((x) => x.id === taskId)!
       try {
@@ -252,12 +254,15 @@ export class Orchestrator {
           return s
         })
         this.recalcFetched()
+        console.log('[orchestrator] worker task completed', { taskId })
       } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.log('[orchestrator] worker task failed', { taskId, error: message, network: isNetworkError(err) })
         this.state.update((s) => {
           const t = s.tasks.find((x) => x.id === taskId)
           if (t) {
             t.status = 'failed'
-            t.error = err instanceof Error ? err.message : String(err)
+            t.error = message
             t.network = isNetworkError(err)
           }
           return s

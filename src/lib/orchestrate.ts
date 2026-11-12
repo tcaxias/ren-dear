@@ -159,7 +159,13 @@ export class Orchestrator {
       const endpoint = byId.get(t.endpointId)
       return endpoint ? [endpoint.id, t.dateKey] as [string, string] : null
     }).filter((k): k is [string, string] => k !== null)
-    const cached = await db.fetches.bulkGet(keys)
+    let cached: Array<{ endpoint: string; dateKey: string; payload: RenRecord[]; fetchedAt: number; params?: DateParams } | undefined>
+    try {
+      cached = await db.fetches.bulkGet(keys)
+    } catch (err) {
+      console.warn('[orchestrator] markCachedOk bulkGet failed, skipping cache check:', err)
+      return
+    }
     cached.forEach((entry, i) => {
       if (!entry) return
       const task = queuedTasks[i]

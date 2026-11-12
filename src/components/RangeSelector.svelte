@@ -81,7 +81,7 @@
         <input id="to" type="date" bind:value={to} />
       </div>
       <div class="field actions">
-        <button type="button" onclick={apply}>{t('endpoints')} {selected.length}</button>
+        <button type="button" onclick={apply}>{t('apply')} ({selected.length})</button>
       </div>
     </div>
 

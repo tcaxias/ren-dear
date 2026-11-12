@@ -20,7 +20,7 @@ describe('buildUrl', () => {
     expect(url.origin).toBe('https://carry-boo.tcx.workers.dev')
     expect(url.searchParams.get('culture')).toBe('pt-PT')
     expect(url.searchParams.get('date')).toBe('2024-01-15')
-    expect(url.pathname).toContain('eletricidade/balanco/diario')
+    expect(url.pathname).toContain('electricity/ElectricityConsumptionSupplyDaily')
   })
 
   it('ignores params the endpoint does not request (daily sends no year/month)', () => {

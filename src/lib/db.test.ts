@@ -3,19 +3,19 @@ import { dateKeyFor, isFresh, DEFAULT_TTL_DAYS } from './db.js'
 import { ENDPOINTS } from './api.js'
 
 const daily = ENDPOINTS.find((e) => e.id === 'elec-balance-daily')!
-const yearly = ENDPOINTS.find((e) => e.id === 'elec-installed-yearly')!
+const monthly = ENDPOINTS.find((e) => e.id === 'elec-installed-yearly')!
 
 describe('dateKeyFor', () => {
   it('daily endpoint returns the date', () => {
     expect(dateKeyFor(daily, { date: '2024-01-15' })).toBe('2024-01-15')
   })
 
-  it('yearly endpoint returns the year', () => {
-    expect(dateKeyFor(yearly, { year: 2024 })).toBe('2024')
+  it('monthly endpoint returns the year-month', () => {
+    expect(dateKeyFor(monthly, { year: 2024, month: 1 })).toBe('2024-01')
   })
 
   it('falls back to date when granularity fields are missing', () => {
-    expect(dateKeyFor(yearly, { date: '2024-03-10' })).toBe('2024-03-10')
+    expect(dateKeyFor(monthly, { date: '2024-03-10' })).toBe('2024-03-10')
   })
 })
 

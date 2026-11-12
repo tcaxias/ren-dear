@@ -3,7 +3,7 @@ import { expandRange, CONCURRENCY } from './orchestrate.js'
 import { ENDPOINTS } from './api.js'
 
 const daily = ENDPOINTS.find((e) => e.id === 'elec-balance-daily')!
-const yearly = ENDPOINTS.find((e) => e.id === 'elec-installed-yearly')!
+const monthly = ENDPOINTS.find((e) => e.id === 'elec-installed-yearly')!
 
 function utc(y: number, m: number, d: number): Date {
   return new Date(Date.UTC(y, m, d))
@@ -19,9 +19,13 @@ describe('expandRange', () => {
     ])
   })
 
-  it('expands yearly into one task per year', () => {
-    const tasks = expandRange(yearly, utc(2022, 0, 1), utc(2024, 11, 31))
-    expect(tasks).toEqual([{ year: 2022 }, { year: 2023 }, { year: 2024 }])
+  it('expands monthly into one task per month', () => {
+    const tasks = expandRange(monthly, utc(2024, 0, 1), utc(2024, 2, 1))
+    expect(tasks).toEqual([
+      { year: 2024, month: 1 },
+      { year: 2024, month: 2 },
+      { year: 2024, month: 3 },
+    ])
   })
 
   it('returns an empty list when from is after to', () => {

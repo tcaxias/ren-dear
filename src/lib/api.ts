@@ -16,7 +16,7 @@
  * adjusted here if the real paths differ.
  */
 
-export const API_BASE = 'https://ren-dear-proxy.tcx.workers.dev/'
+export const API_BASE = 'https://carry-boo.tcx.workers.dev/'
 
 export type Culture = 'pt-PT' | 'en-US'
 export type Granularity = 'daily' | 'monthly' | 'yearly'

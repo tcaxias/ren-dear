@@ -17,7 +17,7 @@ afterEach(() => {
 describe('buildUrl', () => {
   it('builds a daily URL with culture + date', () => {
     const url = buildUrl(ep, { date: '2024-01-15' }, 'pt-PT')
-    expect(url.origin).toBe('https://servicebus.ren.pt')
+    expect(url.origin).toBe('https://ren-dear-proxy.tcx.workers.dev')
     expect(url.searchParams.get('culture')).toBe('pt-PT')
     expect(url.searchParams.get('date')).toBe('2024-01-15')
     expect(url.pathname).toContain('eletricidade/balanco/diario')

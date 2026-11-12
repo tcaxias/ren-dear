@@ -89,11 +89,13 @@
     await orchestrator.markCachedOk(endpoints)
 
     // Merge any cached rows into the UI dataset (resume on reload).
+    const cachedRows: Row[] = []
     for (const task of orchestrator.snapshot.tasks) {
       if (task.status === 'ok' && task.rows.length) {
-        data.merge(toRows(task.endpointId, task.dateKey, task.rows))
+        cachedRows.push(...toRows(task.endpointId, task.dateKey, task.rows))
       }
     }
+    if (cachedRows.length) data.merge(cachedRows)
 
     const culture = apiCulture(lang)
 
@@ -107,11 +109,13 @@
     await orchestrator.execute(fetchTask, endpoints, culture)
 
     // Merge freshly fetched rows.
+    const newRows: Row[] = []
     for (const task of orchestrator.snapshot.tasks) {
       if (task.status === 'ok' && task.rows.length) {
-        data.merge(toRows(task.endpointId, task.dateKey, task.rows))
+        newRows.push(...toRows(task.endpointId, task.dateKey, task.rows))
       }
     }
+    if (newRows.length) data.merge(newRows)
 
     const failed = orchestrator.snapshot.tasks.filter((t) => t.status === 'failed')
     const networkFail = failed.some((t) => t.network)
